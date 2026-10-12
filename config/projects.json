@@ -1,0 +1,98 @@
+{
+  "说明": "YOLO工作台 + 多模态组件 开源项目注册表。tier: cpu=纯CPU, gpu8=8GB显存, gpu12=12GB+, all=通用。install: pip/conda/git/url。license 以各官方仓库为准。",
+  "runtime": [
+    {"id": "python", "name": "Python", "repo": "https://www.python.org", "license": "PSF", "purpose": "运行环境", "install": "python.org 安装包", "tier": "all"},
+    {"id": "cuda", "name": "NVIDIA CUDA Toolkit", "repo": "https://developer.nvidia.com/cuda-toolkit", "license": "NVIDIA EULA", "purpose": "GPU 计算", "install": "nvidia 官方安装包", "tier": "gpu8"},
+    {"id": "cudnn", "name": "cuDNN", "repo": "https://developer.nvidia.com/cudnn", "license": "NVIDIA EULA", "purpose": "深度网络加速", "install": "nvidia 官方安装包", "tier": "gpu8"}
+  ],
+  "ml-core": [
+    {"id": "pytorch", "name": "PyTorch", "repo": "https://github.com/pytorch/pytorch", "license": "BSD-3-Clause", "purpose": "深度学习框架", "install": "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126", "tier": "all"},
+    {"id": "torchvision", "name": "torchvision", "repo": "https://github.com/pytorch/vision", "license": "BSD-3-Clause", "purpose": "图像模型", "install": "pip install torchvision", "tier": "all"},
+    {"id": "tensorflow", "name": "TensorFlow", "repo": "https://github.com/tensorflow/tensorflow", "license": "Apache-2.0", "purpose": "深度学习框架(可选)", "install": "pip install tensorflow", "tier": "all"},
+    {"id": "transformers", "name": "HuggingFace Transformers", "repo": "https://github.com/huggingface/transformers", "license": "Apache-2.0", "purpose": "模型库/推理", "install": "pip install transformers", "tier": "all"},
+    {"id": "accelerate", "name": "Accelerate", "repo": "https://github.com/huggingface/accelerate", "license": "Apache-2.0", "purpose": "分布式/显存优化", "install": "pip install accelerate", "tier": "all"},
+    {"id": "bitsandbytes", "name": "bitsandbytes", "repo": "https://github.com/bitsandbytes-foundation/bitsandbytes", "license": "MIT", "purpose": "4bit 量化", "install": "pip install bitsandbytes", "tier": "gpu8"},
+    {"id": "onnx", "name": "ONNX", "repo": "https://github.com/onnx/onnx", "license": "Apache-2.0", "purpose": "模型交换", "install": "pip install onnx", "tier": "all"},
+    {"id": "onnxruntime", "name": "ONNX Runtime", "repo": "https://github.com/microsoft/onnxruntime", "license": "MIT", "purpose": "推理运行时", "install": "pip install onnxruntime-gpu", "tier": "all"}
+  ],
+  "detection": [
+    {"id": "ultralytics", "name": "Ultralytics (YOLOv5/v8/v11/v26)", "repo": "https://github.com/ultralytics/ultralytics", "license": "AGPL-3.0", "purpose": "检测/姿态/分割/训练", "install": "pip install ultralytics", "tier": "all"},
+    {"id": "yolov5", "name": "YOLOv5", "repo": "https://github.com/ultralytics/yolov5", "license": "AGPL-3.0", "purpose": "经典 YOLO", "install": "git clone https://github.com/ultralytics/yolov5", "tier": "all"},
+    {"id": "yolov9", "name": "YOLOv9", "repo": "https://github.com/WongKinYiu/yolov9", "license": "GPL-3.0", "purpose": "可编程梯度信息 YOLO", "install": "git clone https://github.com/WongKinYiu/yolov9", "tier": "all"},
+    {"id": "yolov10", "name": "YOLOv10", "repo": "https://github.com/THU-MIG/yolov10", "license": "AGPL-3.0", "purpose": "端到端无NMS YOLO", "install": "pip install ultralytics", "tier": "all"},
+    {"id": "mmdetection", "name": "MMDetection", "repo": "https://github.com/open-mmlab/mmdetection", "license": "Apache-2.0", "purpose": "检测工具箱", "install": "pip install -U openmim && mim install mmdet", "tier": "all"},
+    {"id": "detectron2", "name": "Detectron2", "repo": "https://github.com/facebookresearch/detectron2", "license": "Apache-2.0", "purpose": "检测/分割", "install": "pip install detectron2", "tier": "all"},
+    {"id": "rtdetr", "name": "RT-DETR", "repo": "https://github.com/lyuwenyu/RT-DETR", "license": "Apache-2.0", "purpose": "实时DETR", "install": "git clone https://github.com/lyuwenyu/RT-DETR", "tier": "all"},
+    {"id": "groundingdino", "name": "Grounding DINO", "repo": "https://github.com/IDEA-Research/GroundingDINO", "license": "Apache-2.0", "purpose": "开放词汇检测", "install": "git clone https://github.com/IDEA-Research/GroundingDINO", "tier": "gpu8"},
+    {"id": "sahi", "name": "SAHI", "repo": "https://github.com/obss/sahi", "license": "Apache-2.0", "purpose": "切片推理大图检测", "install": "pip install sahi", "tier": "all"},
+    {"id": "supervision", "name": "Supervision", "repo": "https://github.com/roboflow/supervision", "license": "MIT", "purpose": "检测后处理/可视化", "install": "pip install supervision", "tier": "all"}
+  ],
+  "pose": [
+    {"id": "mmpose", "name": "MMPose", "repo": "https://github.com/open-mmlab/mmpose", "license": "Apache-2.0", "purpose": "姿态估计工具箱", "install": "pip install -U openmim && mim install mmpose", "tier": "all"},
+    {"id": "mediapipe", "name": "MediaPipe", "repo": "https://github.com/google-ai-edge/mediapipe", "license": "Apache-2.0", "purpose": "轻量姿态/手部", "install": "pip install mediapipe", "tier": "all"}
+  ],
+  "tracking": [
+    {"id": "bytetrack", "name": "ByteTrack", "repo": "https://github.com/ifzhang/ByteTrack", "license": "MIT", "purpose": "多目标跟踪", "install": "pip install -e . (仓库)", "tier": "all"},
+    {"id": "boxmot", "name": "BoxMOT (ByteTrack/DeepSORT等)", "repo": "https://github.com/mikel-brostrom/yolo_tracking", "license": "GPL-3.0", "purpose": "YOLO跟踪全家桶", "install": "pip install boxmot", "tier": "all"}
+  ],
+  "diffusion": [
+    {"id": "diffusers", "name": "Diffusers", "repo": "https://github.com/huggingface/diffusers", "license": "Apache-2.0", "purpose": "扩散模型管线", "install": "pip install diffusers", "tier": "all"},
+    {"id": "sd15", "name": "Stable Diffusion v1.5", "repo": "https://huggingface.co/runwayml/stable-diffusion-v1-5", "license": "CreativeML Open RAIL-M", "purpose": "底模/修复", "install": "huggingface-cli download", "tier": "gpu8"},
+    {"id": "sdxl", "name": "Stable Diffusion XL", "repo": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0", "license": "CreativeML Open RAIL++-M", "purpose": "高分辨率底模", "install": "huggingface-cli download", "tier": "gpu12"},
+    {"id": "flux", "name": "FLUX.1", "repo": "https://github.com/black-forest-labs/flux", "license": "FLUX.1 [dev] Non-Commercial", "purpose": "最强开源文生图", "install": "git clone https://github.com/black-forest-labs/flux", "tier": "gpu12"},
+    {"id": "controlnet", "name": "ControlNet", "repo": "https://github.com/lllyasviel/ControlNet", "license": "Apache-2.0", "purpose": "姿态/深度/边缘控制", "install": "huggingface-cli download lllyasviel/control_v11p_sd15_openpose", "tier": "gpu8"},
+    {"id": "ipadapter", "name": "IP-Adapter", "repo": "https://github.com/tencent-ailab/IP-Adapter", "license": "Apache-2.0", "purpose": "外观/服装注入", "install": "git clone https://github.com/tencent-ailab/IP-Adapter", "tier": "gpu8"},
+    {"id": "animatediff", "name": "AnimateDiff", "repo": "https://github.com/guoyww/AnimateDiff", "license": "Apache-2.0", "purpose": "文生视频", "install": "git clone https://github.com/guoyww/AnimateDiff", "tier": "gpu12"},
+    {"id": "realisticvision", "name": "Realistic Vision V5.1", "repo": "https://huggingface.co/SG161222/Realistic_Vision_V5.1_noVAE", "license": "以模型仓库为准", "purpose": "写实底模", "install": "huggingface-cli download", "tier": "gpu8"}
+  ],
+  "depth-3d": [
+    {"id": "marigold", "name": "Marigold", "repo": "https://github.com/prs-eth/Marigold", "license": "Apache-2.0", "purpose": "单目深度", "install": "pip install diffusers", "tier": "gpu8"},
+    {"id": "depthanything", "name": "Depth Anything", "repo": "https://github.com/LiheYoung/Depth-Anything", "license": "Apache-2.0", "purpose": "通用深度估计", "install": "git clone https://github.com/LiheYoung/Depth-Anything", "tier": "all"},
+    {"id": "colmap", "name": "COLMAP / pycolmap", "repo": "https://github.com/colmap/colmap", "license": "BSD-3-Clause", "purpose": "三维重建", "install": "pip install pycolmap", "tier": "all"},
+    {"id": "openmvg", "name": "OpenMVG", "repo": "https://github.com/openMVG/openMVG", "license": "MPL-2.0", "purpose": "多视图几何", "install": "源码编译", "tier": "all"},
+    {"id": "open3d", "name": "Open3D", "repo": "https://github.com/isl-org/Open3D", "license": "MIT", "purpose": "点云/网格处理", "install": "pip install open3d", "tier": "all"},
+    {"id": "smplx", "name": "SMPL-X / smplx", "repo": "https://github.com/vchoutas/smplx", "license": "以官方模型许可为准", "purpose": "人体参数模型", "install": "pip install smplx", "tier": "all"},
+    {"id": "mujoco", "name": "MuJoCo", "repo": "https://github.com/google-deepmind/mujoco", "license": "Apache-2.0", "purpose": "物理仿真", "install": "pip install mujoco", "tier": "all"},
+    {"id": "blender", "name": "Blender", "repo": "https://www.blender.org", "license": "GPL-2.0+", "purpose": "3D 渲染", "install": "官方安装包", "tier": "all"},
+    {"id": "trimesh", "name": "trimesh", "repo": "https://github.com/mikedh/trimesh", "license": "MIT", "purpose": "网格操作", "install": "pip install trimesh", "tier": "all"}
+  ],
+  "vision-language": [
+    {"id": "qwen2_5vl", "name": "Qwen2.5-VL (3B/7B)", "repo": "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct", "license": "Apache-2.0", "purpose": "看图/视频", "install": "huggingface-cli download", "tier": "gpu8"},
+    {"id": "qwen3vl", "name": "Qwen3-VL (8B)", "repo": "https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct", "license": "Apache-2.0", "purpose": "更强看图/视频", "install": "huggingface-cli download", "tier": "gpu8"},
+    {"id": "internvl", "name": "InternVL", "repo": "https://github.com/OpenGVLab/InternVL", "license": "MIT", "purpose": "多模态大模型", "install": "git clone https://github.com/OpenGVLab/InternVL", "tier": "gpu8"},
+    {"id": "minicpmv", "name": "MiniCPM-V", "repo": "https://github.com/OpenBMB/MiniCPM-V", "license": "Apache-2.0", "purpose": "端侧多模态", "install": "pip install -e . (仓库)", "tier": "gpu8"},
+    {"id": "llava", "name": "LLaVA", "repo": "https://github.com/haotian-liu/LLaVA", "license": "Apache-2.0", "purpose": "视觉指令模型", "install": "git clone https://github.com/haotian-liu/LLaVA", "tier": "gpu12"},
+    {"id": "florence2", "name": "Florence-2", "repo": "https://huggingface.co/microsoft/Florence-2-base", "license": "MIT", "purpose": "视觉任务基础模型", "install": "huggingface-cli download", "tier": "gpu8"},
+    {"id": "clip", "name": "OpenAI CLIP", "repo": "https://github.com/openai/CLIP", "license": "MIT", "purpose": "图文匹配/质量过滤", "install": "pip install openai-clip", "tier": "all"}
+  ],
+  "asr-ocr": [
+    {"id": "fasterwhisper", "name": "faster-whisper", "repo": "https://github.com/SYSTRAN/faster-whisper", "license": "MIT", "purpose": "语音识别", "install": "pip install faster-whisper", "tier": "all"},
+    {"id": "whispercpp", "name": "whisper.cpp", "repo": "https://github.com/ggerganov/whisper.cpp", "license": "MIT", "purpose": "轻量本地 ASR", "install": "git clone https://github.com/ggerganov/whisper.cpp", "tier": "all"},
+    {"id": "sensevoice", "name": "SenseVoice", "repo": "https://github.com/FunAudioLLM/SenseVoice", "license": "Apache-2.0", "purpose": "中文多语言 ASR", "install": "pip install funasr", "tier": "all"},
+    {"id": "paraformer", "name": "Paraformer", "repo": "https://github.com/modelscope/FunASR", "license": "MIT", "purpose": "流式 ASR", "install": "pip install funasr", "tier": "all"},
+    {"id": "rapidocr", "name": "RapidOCR", "repo": "https://github.com/RapidAI/RapidOCR", "license": "Apache-2.0", "purpose": "OCR", "install": "pip install rapidocr-onnxruntime", "tier": "all"},
+    {"id": "paddleocr", "name": "PaddleOCR", "repo": "https://github.com/PaddlePaddle/PaddleOCR", "license": "Apache-2.0", "purpose": "高精度 OCR", "install": "pip install paddleocr", "tier": "all"},
+    {"id": "tesseract", "name": "Tesseract OCR", "repo": "https://github.com/tesseract-ocr/tesseract", "license": "Apache-2.0", "purpose": "经典 OCR", "install": "apt/官方安装包", "tier": "all"}
+  ],
+  "tools": [
+    {"id": "opencv", "name": "OpenCV", "repo": "https://opencv.org", "license": "Apache-2.0", "purpose": "图像处理", "install": "pip install opencv-python", "tier": "all"},
+    {"id": "numpy", "name": "NumPy", "repo": "https://numpy.org", "license": "BSD-3-Clause", "purpose": "数值计算", "install": "pip install numpy", "tier": "all"},
+    {"id": "scipy", "name": "SciPy", "repo": "https://scipy.org", "license": "BSD-3-Clause", "purpose": "科学计算", "install": "pip install scipy", "tier": "all"},
+    {"id": "pillow", "name": "Pillow", "repo": "https://python-pillow.org", "license": "HPND", "purpose": "图像读写", "install": "pip install pillow", "tier": "all"},
+    {"id": "albumentations", "name": "Albumentations", "repo": "https://github.com/albumentations-team/albumentations", "license": "MIT", "purpose": "数据增强", "install": "pip install albumentations", "tier": "all"},
+    {"id": "imgaug", "name": "imgaug", "repo": "https://github.com/aleju/imgaug", "license": "MIT", "purpose": "数据增强", "install": "pip install imgaug", "tier": "all"},
+    {"id": "tensorrt", "name": "TensorRT", "repo": "https://developer.nvidia.com/tensorrt", "license": "NVIDIA EULA", "purpose": "GPU 推理加速", "install": "nvidia 官方安装包", "tier": "gpu8"},
+    {"id": "openvino", "name": "OpenVINO", "repo": "https://github.com/openvinotoolkit/openvino", "license": "Apache-2.0", "purpose": "跨平台推理", "install": "pip install openvino", "tier": "all"},
+    {"id": "ncnn", "name": "ncnn", "repo": "https://github.com/Tencent/ncnn", "license": "BSD-3-Clause", "purpose": "端侧推理", "install": "源码编译", "tier": "all"},
+    {"id": "rknn", "name": "RKNN-Toolkit", "repo": "https://github.com/airockchip/rknn-toolkit2", "license": "Apache-2.0", "purpose": "瑞芯微 NPU", "install": "pip install rknn-toolkit2", "tier": "all"},
+    {"id": "huggingface_hub", "name": "huggingface_hub", "repo": "https://github.com/huggingface/huggingface_hub", "license": "Apache-2.0", "purpose": "模型下载", "install": "pip install huggingface_hub", "tier": "all"},
+    {"id": "modelscope", "name": "ModelScope", "repo": "https://github.com/modelscope/modelscope", "license": "Apache-2.0", "purpose": "国内模型源", "install": "pip install modelscope", "tier": "all"},
+    {"id": "mcp", "name": "MCP Python SDK", "repo": "https://github.com/modelcontextprotocol/python-sdk", "license": "MIT", "purpose": "组件服务接入", "install": "pip install mcp", "tier": "all"},
+    {"id": "fastapi", "name": "FastAPI", "repo": "https://github.com/fastapi/fastapi", "license": "MIT", "purpose": "API 服务", "install": "pip install fastapi uvicorn", "tier": "all"},
+    {"id": "ffmpeg", "name": "FFmpeg", "repo": "https://ffmpeg.org", "license": "LGPL/GPL", "purpose": "视频/音频处理", "install": "官方安装包", "tier": "all"},
+    {"id": "pyqt6", "name": "PyQt6", "repo": "https://www.riverbankcomputing.com/software/pyqt/", "license": "GPL-3.0/商业", "purpose": "界面", "install": "pip install PyQt6", "tier": "all"},
+    {"id": "tkinterdnd2", "name": "tkinterdnd2", "repo": "https://github.com/pmgagne/tkinterdnd2", "license": "MIT", "purpose": "拖拽", "install": "pip install tkinterdnd2", "tier": "all"},
+    {"id": "mss", "name": "mss", "repo": "https://github.com/BoboTiG/python-mss", "license": "MIT", "purpose": "录屏", "install": "pip install mss", "tier": "all"},
+    {"id": "psutil", "name": "psutil", "repo": "https://github.com/giampaolo/psutil", "license": "BSD-3-Clause", "purpose": "系统监控", "install": "pip install psutil", "tier": "all"}
+  ]
+}

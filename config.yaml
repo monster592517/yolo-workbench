@@ -1,0 +1,97 @@
+# YOLO工作台 配置文件 (集中管理所有配置)
+# 修改后重启生效
+
+app:
+  name: "YOLO工作台"
+  version: "0.35.2"
+
+paths:
+  data_dir: data/datasets
+  output_dir: runs/outputs
+  record_dir: runs/recordings
+  log_dir: runs/logs
+
+mirrors:
+  pip: "https://pypi.org/simple"           # 官方源; 清华镜像对部分新包04
+  no_proxy: true                            # 绕过失效的系统代理(127.0.0.1:16199)加速安装
+  torch_gpu: "https://download.pytorch.org/whl/cu121"
+  torch_cpu: "https://download.pytorch.org/whl/cpu"
+  torch_jetson: "https://download.pytorch.org/whl/cpu"
+
+camera:
+  max_check: 6
+  backend: "DSHOW"     # Windows: DSHOW | Linux: V4L2
+  default_index: 0
+
+timeouts:
+  pip_install: 600           # pip 安装超时(秒)
+  pip_quick: 300             # 快速安装超时
+  subprocess: 10             # 子进程通用超时
+  gpu_check: 5               # GPU 检测超时
+  network_accept: 1          # 网络 accept 超时
+  network_transfer: 30       # 文件传输超时
+
+training:
+  default_model: "yolo11n.pt"
+  epochs: 100
+  batch: 16
+  imgsz: 640
+  lr0: 0.01
+  lrf: 0.01
+  momentum: 0.937
+  weight_decay: 0.0005
+  warmup_epochs: 3
+  optimizer: "auto"
+  patience: 50
+  augment: false
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.4
+  degrees: 0.0
+  translate: 0.1
+  scale: 0.5
+  shear: 0.0
+  flipud: 0.0
+  fliplr: 0.5
+  mosaic: 1.0
+  mixup: 0.0
+  copy_paste: 0.0
+
+detection:
+  conf: 0.5
+  device: "auto"        # auto: 自动选择 GPU(CUDA) > CPU
+  max_display_fps: 60
+  frame_skip: 2
+
+recording:
+  fps: 20.0
+  codec: "mp4v"
+
+logging:
+  level: INFO
+  max_file_size_mb: 10
+  keep_backups: 5
+
+
+
+
+health:
+  timeout: 10
+  disk_warn_gb: 1
+  ram_warn_pct: 90
+  auto_check_interval_min: 30
+  log_max_size_mb: 500
+
+auto_annotate:
+  default_conf: 0.5
+  use_pose: false
+  overwrite: false
+  batch_size: 8
+
+# ── Python 版本要求 (v0.10.0+: 项目统一 Python 3.11+, 标注工具官方约束) ──
+python:
+  min_version: "3.11"
+
+# ── UI 主题 ──
+ui:
+  theme_mode: 'dark'   # light | dark | auto(跟随系统时间)

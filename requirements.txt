@@ -1,0 +1,24 @@
+# YOLO工作台 — 项目统一 Python 3.11+ (推荐 3.13)
+# 安装: pip install -r requirements.txt -i https://pypi.org/simple
+# 说明: 本文件为最小依赖清单; 旧版为环境导出快照, 已废弃
+
+# 核心依赖
+ultralytics>=8.4
+opencv-python>=4.10
+numpy
+torch
+torchvision
+mss
+Pillow
+pyyaml
+
+# 历史会话查看 (.codex / DSH zstd 会话档案)
+zstandard
+
+# 界面与系统
+tkinterdnd2
+psutil
+
+# 标注工具 (X-AnyLabeling, 官方要求 Python 3.11+)
+x-anylabeling-cvhub>=4.0.0b13
+

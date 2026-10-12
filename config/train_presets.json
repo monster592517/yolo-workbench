@@ -1,0 +1,9 @@
+{
+  "说明": "训练预设。字段: model(YOLO pose 模型), epochs, batch, imgsz, mosaic。均按 8GB 显存 (RTX 4070 Laptop) 校准。",
+  "n_fast": {"model": "yolo11n-pose.pt", "epochs": 30, "batch": 32, "imgsz": 640, "mosaic": 1.0},
+  "n_full": {"model": "yolo11n-pose.pt", "epochs": 120, "batch": 32, "imgsz": 640, "mosaic": 1.0},
+  "s_full": {"model": "yolo11s-pose.pt", "epochs": 150, "batch": 24, "imgsz": 640, "mosaic": 1.0},
+  "m_full": {"model": "yolo11m-pose.pt", "epochs": 180, "batch": 16, "imgsz": 640, "mosaic": 1.0},
+  "l_full": {"model": "yolo11l-pose.pt", "epochs": 200, "batch": 8, "imgsz": 640, "mosaic": 1.0},
+  "x_full": {"model": "yolo11x-pose.pt", "epochs": 200, "batch": 4, "imgsz": 640, "mosaic": 1.0}
+}

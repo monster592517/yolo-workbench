@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YOLO 工作台 · 摔倒仿真 · 技术方案全史</title>
+<style>
+  :root{
+    --bg:#0b0f1a; --glass:rgba(255,255,255,.06); --glass-brd:rgba(255,255,255,.14);
+    --txt:#e8edf5; --muted:#9fb0c8; --accent:#6ee7ff; --accent2:#a78bfa; --ok:#3ddc97; --warn:#ffb454; --bad:#ff6b81;
+    --radius:22px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:"Microsoft YaHei UI","PingFang SC",sans-serif;overflow-x:hidden;line-height:1.7}
+  body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur(120px);opacity:.32;z-index:0;pointer-events:none}
+  body::before{width:60vw;height:60vw;left:-15vw;top:-18vw;background:radial-gradient(circle,#1e5f8a,transparent 65%)}
+  body::after{width:55vw;height:55vw;right:-14vw;bottom:-16vw;background:radial-gradient(circle,#5b3d8f,transparent 65%)}
+  .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:34px 22px 90px}
+  .glass{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);
+    backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);
+    box-shadow:0 8px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08)}
+  header.hero{padding:46px 40px;margin-bottom:26px;text-align:center;position:relative;overflow:hidden}
+  header.hero h1{font-size:2.4em;background:linear-gradient(120deg,#fff 10%,var(--accent) 55%,var(--accent2) 95%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:10px}
+  header.hero .sub{color:var(--muted);font-size:1.02em;max-width:840px;margin:0 auto}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
+  .chip{padding:7px 15px;border-radius:999px;font-size:.86em;background:rgba(110,231,255,.1);
+    border:1px solid rgba(110,231,255,.25);color:var(--accent)}
+  nav.toc{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px;justify-content:center}
+  nav.toc a{padding:9px 17px;border-radius:14px;text-decoration:none;color:var(--txt);
+    background:var(--glass);border:1px solid var(--glass-brd);transition:.2s;font-size:.9em}
+  nav.toc a:hover{background:rgba(110,231,255,.14);border-color:rgba(110,231,255,.4);transform:translateY(-2px)}
+  section{margin-bottom:30px;padding:32px 38px}
+  section h2{font-size:1.6em;margin-bottom:18px;display:flex;align-items:center;gap:12px}
+  section h2::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+  section h3{font-size:1.13em;margin:22px 0 10px;color:var(--accent)}
+  p.lead{color:var(--muted);margin-bottom:14px}
+  .timeline{position:relative;padding-left:26px}
+  .timeline::before{content:"";position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:linear-gradient(180deg,var(--accent),var(--accent2),transparent)}
+  .tl-item{position:relative;margin-bottom:18px}
+  .tl-item::before{content:"";position:absolute;left:-26px;top:6px;width:13px;height:13px;border-radius:50%;background:var(--bg);border:2px solid var(--accent);box-shadow:0 0 10px var(--accent)}
+  .tl-time{font-size:.8em;color:var(--accent);font-weight:bold;letter-spacing:.5px}
+  .tl-title{font-weight:bold;margin:2px 0 4px}
+  .tl-desc{color:var(--muted);font-size:.93em}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+  .card{padding:20px 22px;transition:.25s;position:relative}
+  .card:hover{transform:translateY(-4px);border-color:rgba(110,231,255,.45);box-shadow:0 14px 44px rgba(0,0,0,.4)}
+  .card .tag{display:inline-block;font-size:.75em;padding:3px 10px;border-radius:999px;margin-bottom:8px}
+  .tag.now{background:rgba(61,220,151,.14);border:1px solid rgba(61,220,151,.4);color:var(--ok)}
+  .tag.dead{background:rgba(255,107,129,.12);border:1px solid rgba(255,107,129,.4);color:var(--bad)}
+  .tag.standby{background:rgba(255,180,84,.12);border:1px solid rgba(255,180,84,.4);color:var(--warn)}
+  .card h4{font-size:1.05em;margin-bottom:6px}
+  .card p{font-size:.92em;color:#c9d6e8}
+  .card .why{color:var(--muted);font-size:.9em;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.1)}
+  table{width:100%;border-collapse:collapse;font-size:.92em;margin-top:12px}
+  th,td{padding:10px 14px;text-align:left;border-bottom:1px solid rgba(255,255,255,.08)}
+  th{color:var(--accent);font-weight:600;background:rgba(110,231,255,.05)}
+  tr:hover td{background:rgba(255,255,255,.03)}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+  .battle{display:flex;gap:18px;align-items:flex-start;padding:22px;margin-bottom:16px}
+  .battle .num{font-size:2.2em;font-weight:bold;color:var(--accent);min-width:70px;line-height:1}
+  footer{text-align:center;color:var(--muted);font-size:.85em;margin-top:40px}
+  .pill{display:inline-block;padding:2px 9px;border-radius:8px;font-size:.78em;margin:0 2px 4px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+  /* ═══ v2 创新美化 ═══ */
+  .aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .aurora span{position:absolute;border-radius:50%;filter:blur(110px);opacity:.42;animation:drift 26s ease-in-out infinite alternate}
+  .aurora span:nth-child(1){width:46vw;height:46vw;left:-8vw;top:-10vw;background:radial-gradient(circle,#1e5f8a,transparent 62%);}
+  .aurora span:nth-child(2){width:38vw;height:38vw;right:-6vw;top:22vh;background:radial-gradient(circle,#5b3d8f,transparent 62%);animation-delay:-8s}
+  .aurora span:nth-child(3){width:34vw;height:34vw;left:30vw;bottom:-12vh;background:radial-gradient(circle,#0e7490,transparent 62%);animation-delay:-16s}
+  @keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(6vw,4vh,0) scale(1.15)}}
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+  .card,.battle{transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease}
+  .card:hover,.battle:hover{transition-delay:0}
+  nav.toc a.active{background:rgba(110,231,255,.22);border-color:rgba(110,231,255,.6);color:#fff;box-shadow:0 0 18px rgba(110,231,255,.25)}
+  .filters{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap}
+  .filters button{padding:7px 15px;border-radius:999px;border:1px solid var(--glass-brd);background:var(--glass);color:var(--muted);cursor:pointer;font-size:.85em;transition:.2s}
+  .filters button.on{color:#06121d;background:var(--accent);border-color:var(--accent);font-weight:700}
+  .counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:14px 0}
+  .counter{padding:16px;text-align:center}
+  .counter b{display:block;font-size:1.9em;color:var(--accent);line-height:1.1}
+  .counter span{font-size:.84em;color:var(--muted)}
+  .chart{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .crow{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center;font-size:.88em}
+  .crow .bar{height:16px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.06)}
+  .crow .fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+  .crow .fill.dead{background:linear-gradient(90deg,#815d5d,var(--bad))}
+  .crow .fill.now{background:linear-gradient(90deg,#2c9a72,var(--ok))}
+  .crow .num{text-align:right;color:var(--muted);font-family:Consolas,monospace}
+  @media (max-width:720px){ header.hero{padding:30px 20px} section{padding:22px 18px} .battle{flex-direction:column} }
+  @media (prefers-reduced-motion:reduce){.aurora span{animation:none}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="aurora"><span></span><span></span><span></span></div>
+
+  <header class="hero glass">
+    <h1>YOLO 工作台 · 摔倒仿真 · 技术方案全史</h1>
+    <p class="sub">从一台 4GB 独显的笔记本出发，把「合成摔倒视频 → 自动化四区标注 → 自训练检测模型 → 真实照片验收」做成一条可长期无人值守的生产线。这里记录的不是结果，而是每一步的试错、放弃与翻越。</p>
+    <div class="chips">
+      <span class="chip">YOLO 工作台 v0.23.7</span><span class="chip">MiniMax H3 + h3lite</span>
+      <span class="chip">4GB 独显 + 680M 核显分工</span><span class="chip">四区自动标注</span>
+      <span class="chip">自训练闭环</span><span class="chip">DeepSeek × 双宿主</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <a href="#overview">总览</a><a href="#timeline">时间线</a><a href="#matrix">方案矩阵</a>
+    <a href="#vram">4GB 显存攻克</a><a href="#labels">标注体系演进</a><a href="#principle">识别原理</a><a href="#stability">稳定性工程</a>
+    <a href="#opensource">开源清单</a><a href="#ai">AI 生态</a><a href="#results">成效</a>
+  </nav>
+
+  <section id="overview" class="glass">
+    <h2>总览</h2>
+    <p class="lead">项目由一个需求驱动：真实摔倒照片太少（252 张无法支撑训练），需要合成大量「真实可标注」的摔倒视频。合成数据不落地、人物漂移、标注不可用，都是这个需求路上的拦路虎。</p>
+    <h3>最终链路（现役）</h3>
+    <p><span class="pill">真实照片 252 张</span><span class="pill">站起反推 ×10</span><span class="pill">站立帧轮转</span><span class="pill">H3 I2V 640×352/6步/64帧</span><span class="pill">RIFE 48fps</span><span class="pill">RealESRGAN 720p</span><span class="pill">四区标注</span><span class="pill">自训练 yolo11s</span><span class="pill">工作台回填</span><span class="pill">真图验收</span></p>
+    <p class="lead">每个环节都不是一步到位的——下面按时间线与方案矩阵，记录它们各自被尝试、被否定、被翻越的过程。</p>
+  </section>
+
+  <section id="timeline" class="glass">
+    <h2>技术时间线</h2>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-time">2026-08-01</div><div class="tl-title">起点：YOLO工作台 v5.3</div><div class="tl-desc">Codex 首次盘点：Python + Tkinter 模块化目标检测平台，核心业务 = 安全帽检测 + 摔倒检测；三大功能线明确（训练 · 检测 · 部署）。起步即踩坑：沙箱拒绝 apply_patch、补丁脚本转义引号错误、share.py 的 `from __future__` 不在文件开头（历史遗留）——这些早期 bug 的修复确立了"编译检查 + 回归"的项目纪律。</div></div>
+      <div class="tl-item"><div class="tl-time">2026-08-01 ～ 08-06</div><div class="tl-title">工作台 v5.3 → v0.10.x 全功能演进（Codex 主导）</div><div class="tl-desc">7 页布局 → 主题三模式 → 训练/检测/部署/环境/分享/设置；标注工具接入 X-AnyLabeling；数据集拖拽生成；AI 预标注；部署包自动同步 + 板卡自适应（board_detect 自动识别主板 → 重写 requirements → 自动配置/扫描/启动）；日志/审计双模式；安装包版本标记体系。本阶段修复过的代表性 bug：AutoAnnotator 类别名映射与旋转框、CLI 在 GBK 控制台打印崩溃（容错输出）、桌面快捷方式 pythonw 无控制台导致 ultralytics 8.4.87 的 TQDM 因 sys.stdout=None 崩溃（回归测试覆盖）、数据集切换控件显示与变量不一致（兜底修复）、无 val 键数据集训练报错（兼容旧格式）、标注工具 pythonw 静默崩溃（重定向 anylabeling.log 后 8 秒+存活验证）、attrs 26.1.0 与 jsonlines attr.s 冲突（降级 23.2.0）。迭代纪律：每次修复 → 回归 → 五大/六大发布同步（自动重建安装包 + 构建戳 + 版本一致性自检）固化为一等流程。</div></div>
+      <div class="tl-item"><div class="tl-time">2026-08-06（里程碑节点 v0.10.15 → v0.11.22）</div><div class="tl-title">工作台里程碑节点</div><div class="tl-desc">v0.10.15 路径中心（主体文件夹 = 唯一真相源，一次推送全局）；v0.10.16 训练 E030 根治（pythonw + ultralytics TQDM 写 None，双保险）；v0.10.17 标注工具 8 秒存活验证 + 六大发布同步；v0.10.19-21 数据集切换控件/变量脱钩（以控件实值为准 + ds_event 审计）；v0.10.22 转换后台并行（1.33s 拉起）；v0.10.23-30 部署板卡自适应（board_detect 9/9 → 跨平台自适配 → 生成器版本标记 10/10 → 6pt×4 板卡 24/24）；v0.10.36 拖拽三分数据集；v0.10.37 attrs 依赖冲突根治（自检 27 项 + 自我修复第 8 步）；v0.11.4 数据集标注清理（默认剔除标注）；v0.11.5-14 真人 3D（SMPL/Blender）；v0.11.16-22 扩散真人（实验）与关键点标注。前端演进：多窗口 → SPA 5 页 → 7 页常驻堆叠（切换 963ms → 33-90ms）；主题曾按用户要求做"液态玻璃方案 A"后被"Codex 简洁风格"需求覆盖（本网页 v2 的玻璃风 = 那次的未竟之愿）。</div></div>
+      <div class="tl-item"><div class="tl-time">2026-08-06（延续）</div><div class="tl-title">摔倒仿真六次改道（v0.10.39 → v0.11.22）</div><div class="tl-desc">MuJoCo 胶囊人偶（0.98）→ 真人像素合成（0.995 最高）→ 3D 场景重建（0.49 骤降）→ 真人 3D 重建（点云包围盒 37m/10m 级，数学上不可行）→ SMPL/Blender 全链路（0.734）→ 扩散生成真人（实验）。每代都有量化的验收数字，全部因"不像真人/精度骤降/原理不可行"被推翻——这套"失败路径地图"最终把方向钉在 H3 首帧方案上。</div></div>
+      <div class="tl-item"><div class="tl-time">2026-08-29</div><div class="tl-title">harness 双宿主 & 闪退根治（Codex 佐证）</div><div class="tl-desc">harness（DeepSeek 官方 AI 工作台）开始不稳定：复现"启动 15 秒闪退"，定位为 dsh 0.1.2-rc.1 回归 → 降级 0.1.1-rc.2 稳定；同时外接屏问题被记为"本机专属"。Codex 作为兜底宿主，经 AG-Switch 桥接 DeepSeek，形成双宿主冗余。</div></div>
+      <div class="tl-item"><div class="tl-time">2026-09-06（现役）</div><div class="tl-title">摔倒仿真生产化</div><div class="tl-desc">H3 方案确立与质量配方定型：640×352 官方低显存画布 + 6 步 + 64 帧 + RIFE 48fps + RealESRGAN 720p；标签体系从二区演进到四区（0 站立 / 1 失衡 45° / 2 摔倒 / 3 蹲下）；判别从高度比 → 纵横比 → 姿态角（680M 核显 DirectML）；补数据目标 50 条，进入自训练与 252 张真图验收阶段。</div></div>
+    </div>
+  </section>
+
+  <section id="matrix" class="glass">
+    <h2>方案矩阵（含废案与原因链）</h2>
+    <p class="lead">全部 20+ 方案，每条按「尝试 → 失败/放弃原因 → 归宿」记录；废案不省略、不美化。</p>
+    <div class="filters" id="matFilters">
+      <button class="on" data-f="all">全部</button>
+      <button data-f="now">现役</button>
+      <button data-f="dead">废案</button>
+      <button data-f="standby">备用</button>
+    </div>
+
+    <h3>⓪ 摔倒仿真早期（Codex 时代 · 六次改道）—— 被历史验证的"没必要"</h3>
+    <p class="lead">在 H3 之前，摔倒仿真已经走过六条完全不同的路；每一段都有可量化的验收数据，且全部因"效果或原理"被推翻。这段历史证明了最终 H3 首帧方案为何是收敛点。</p>
+    <div class="cards">
+      <div class="card glass"><span class="tag dead">废案</span><h4>MuJoCo 胶囊人偶物理（v0.10.39-44）</h4><p>物理仿真 + 三视图离屏渲染自动出框。真实背景合成，fall_mixed 训练：真实照片 person 12/12、倒地 10/10，val mAP50=0.98。</p><div class="why">放弃：用户明确"不要方块人"——物理是对的，但"胶囊人偶"永远不像真人；整套（含 MuJoCo 依赖/模型/合成器）全删（v0.11.0）。</div></div>
+      <div class="card glass"><span class="tag dead">废案</span><h4>真人像素合成（2D 元素库 · v0.11.0）</h4><p>yolo11n-seg 从真照片抠出 193 个真人元素 + inpaint 车间背景库，随机组合。留出 20 张真图：fall mAP50=0.995 / R=1.0（全场最佳精度）。</p><div class="why">为什么又放弃：精度封顶但"合成痕迹"仍在（人物贴片感、光影不融合）；且只有平面变换，无法应对真实三维视角。它作为精度基准被后两代参照。</div></div>
+      <div class="card glass"><span class="tag dead">废案</span><h4>3D 场景重建（COLMAP+MiDaS · v0.11.1）</h4><p>40 张车间连拍注册 38 张 + 单目深度 → 30 万点云 → 16 个新视角。3D 背景 + 真人抠像 = 400 帧；结果 fall mAP50=0.49（5/10）。</p><div class="why">放弃：3D 背景版本的精度骤降（0.49 vs 照片合成 0.995）——脱离真实视角合成反而引入分布偏差。此条同时证明"场景 3D 不是刚需"。</div></div>
+      <div class="card glass"><span class="tag dead">废案</span><h4>真人 3D 重建（v0.11.2，关键失败）</h4><p>COLMAP 位姿 + MiDaS 深度 + 12 个"站立"视图掩码融合 → 点云包围盒 37m/10m 级（分时段仍 10m 级）。</p><div class="why">硬性失败：数据集的人物是运动对象、没有静止多视角——**数学上无法从现有照片重建同一真人的 3D**。失败产物删除，结论写入 README/CHANGELOG。这是"照片→3D 建模"分支的终结判决。</div></div>
+      <div class="card glass"><span class="tag dead">废案</span><h4>SMPL 真人 3D + Blender 全链路（v0.11.5-14）</h4><p>单图拟合 SMPL + 照片纹理 + 场景点云，Blender 渲染 5 种摔倒关键帧（镜头保护/画幅校验/206 张重生成）；val mAP50=0.734 / test 0.755。</p><div class="why">放弃：渲染结果"离真人还差得远"；精度不如 2D 像素合成（0.99 级）；工程链路最长（建模/烘焙/渲染每个环节都是坑）。调研同时给出方向判断："无限逼近真实只有生成式扩散能做到"。</div></div>
+      <div class="card glass"><span class="tag dead">废案</span><h4>扩散生成真人（v0.11.16-22，实验）</h4><p>全新扩散数据集，链路不依赖 YOLO；修"场景抠人残留人形模糊区" + 224 张新数据；pytest 21/21。</p><div class="why">与 DSH 时代的 H3 方案同期并行的方向；最终以"扩散式生成视频"（H3 I2V）取代"扩散式生成图片再拼合"——首帧锚定让人物一致性从概率问题变成结构性保证。</div></div>
+    </div>
+
+    <h3>① 视频生成主线</h3>
+    <div class="cards">
+      <div class="card glass"><span class="tag dead">废案</span><h4>动画片方案（SD1.5 + AnimateDiff-Evolved + Counterfeit）</h4><p>用工坊的卡通动画引擎生成摔倒镜头，意在复用已有动画管线。</p><div class="why">放弃原因：卡通画风与实拍数据集（车间照片）气质完全不符；合成数据的目的是补训练分布，风格漂移会引入系统性偏差。最终整体弃用。</div></div>
+      <div class="card glass"><span class="tag dead">废案</span><h4>H3 纯文本生成（T2V）</h4><p>不提供首帧，仅以文字描述摔倒过程。</p><div class="why">放弃原因：无首帧锚定，人物外观、场景、机位在镜头内漂移严重；安全帽、服装、车间细节完全不受控，无法用于标注与训练。核心教训：人物一致性必须由"首帧"锁定，不能依赖提示词。</div></div>
+      <div class="card glass"><span class="tag now">现役</span><h4>H3 图生视频（I2V）+ 站立帧照片</h4><p>真实照片 → 站起反推 → 导出站立帧 → 作为 I2V 首帧 → 生成摔倒过程。</p><div class="why">为什么成功：首帧即"人物+场景"的地面真值；提示词只描述动作；（早期单帧）全数据集同一人同一景；（后期）10 张站立帧轮转兼顾多样性与每条内部一致性。这是所有废案淘汰后收敛的结果。</div></div>
+      <div class="card glass"><span class="tag dead">废案</span><h4>官方多镜头参考（Ref2VA）</h4><p>H3 官方参考图模式，用 3 张参考图跨镜头锁定人物身份，是官方"多镜头连续"标准答案。</p><div class="why">放弃原因：参考编码器常驻显存；在 4GB 笔记本上实测中途崩溃，官方文档也注明该模式内存占用高。降级为：工坊侧用角色 LoRA 训练实现跨镜头一致（待实施）；数据集侧改用 I2V 单镜头方案，一致性已够用。</div></div>
+    </div>
+
+    <h3>② 画布与画质演进</h3>
+    <div class="cards">
+      <div class="card glass"><span class="tag dead">废案</span><h4>448×256 / 512×288 画布</h4><p>早期在低显存下"能跑"的尺寸。</p><div class="why">放弃原因：细节不足——安全帽反光条、面部、格栅地面纹理在放大后糊；对"标注级"数据不达标准。迭代方式：先证明能跑（448）→ 提升到 512 看纹理 → 查官方低显存文档找到 640×352 验证桶 → 用"画质抽帧目测"逐档验收。</div></div>
+      <div class="card glass"><span class="tag now">现役</span><h4>640×352 官方低显存画布</h4><p>h3lite 官方技能包中明确验证过的低显存画布（约 0.16MP），配合 W4A8 量化 + 块缓存 + 分块前馈在 4GB 上稳定。</p><div class="why">为什么行：官方"验证桶"意味着采样器/VAE/缓存都在此尺寸被测试过；配合 6 步采样（质量与速度的平衡点）成为本机唯一可信画布。</div></div>
+      <div class="card glass"><span class="tag now">现役</span><h4>RIFE ×2 帧插值 → 48fps</h4><p>H3 原生 24fps；用户要求≥30fps。引入 ComfyUI-Frame-Interpolation（RIFE49 模型 + taichi 后端）在解码后插值。</p><div class="why">为什么行：插值对"合成数据"是安全的（没有真实物理刚体破绽）；48fps 满足且超出目标；全链路仅增加约 1 分钟/条。也有代价：模型放置目录是 vfi_models/rife/&lt;hl&gt;（按目录名推断，初版放错 RIFE_VFI 导致下载失败），配置 yaml 必须以纯 ASCII 写（GBK 读取会崩），均为实际踩坑。</div></div>
+      <div class="card glass"><span class="tag now">现役</span><h4>RealESRGAN ×4 → 1280×720</h4><p>帧级超分到 720p；ncnn-vulkan 版（默认 -g 1 强制独显），失败时 ComfyUI 兜底。</p><div class="why">为什么行：画布 640×352 超分到 720p 是官方推荐消费路径；逐帧超分在 4GB 上仍可行（单帧 ~1s）。痛点：ncnn 与 Comfy 抢 GPU 偶发失败（已有兜底）；观察记录在案。</div></div>
+    </div>
+
+    <h3>③ 内容与构图设计</h3>
+    <div class="cards">
+      <div class="card glass"><span class="tag now">现役</span><h4>固定机位 + 首帧锁定 + 全身优先取景</h4><p>提示词固定"监控机位，构图与首帧一致"；取景加权（全身 70% / 轻微裁边 22% / 残缺 8%），因为用户明确"全身居多、残缺越多概率越低"。</p><div class="why">为什么行：监控视角 = 真实验收场景视角；全身优先 = 标注框完整性；概率加权 = 数据分布可控。</div></div>
+      <div class="card glass"><span class="tag now">现役</span><h4>蹲姿分支（40% + 蹲→倒 55%）</h4><p>新增"蹲下"独立类别：全程蹲=3（不算摔倒）；蹲后失衡倒地=2（摔倒）。提示词区分"蹲着检修"与"蹲久了失衡前扑"。</p><div class="why">为什么加：真图检验发现"蹲着干活"被 3 类模型误判为摔倒（真实工业场景大量蹲姿作业）。解法不是修误判，而是给它独立类别——模型从此学会"蹲 ≠ 摔"。</div></div>
+    </div>
+
+    <h3>④ 判定算法演进</h3>
+    <div class="cards">
+      <div class="card glass"><span class="tag dead">废案</span><h4>高度比判定（h < 0.92×站立高度）</h4><p>用人体框高度下降程度划定"开始失衡"。</p><div class="why">放弃原因：对轻微位移/蹲伏/镜头晃动全部误报——"失衡"阈值过低，数据全标成失衡。教训：框高度是"尺度"不是"姿态"，不能直接当姿态用。</div></div>
+      <div class="card glass"><span class="tag dead">废案</span><h4>纵横比判定（h/w < 1.55 ≈ 45°）</h4><p>用框宽高比近似人体倾斜角。</p><div class="why">放弃原因：蹲姿天然低纵横比（比例≈1.0），站立前倾也常在 1.5 附近——纵横比在两个类别上不可区分；真正需要的是"躯干轴的倾角"而非"包络框形状"。</div></div>
+      <div class="card glass"><span class="tag now">现役</span><h4>姿态角判定（yolo11n-pose 关键点，45° 阈值）</h4><p>取肩中点到髋中点连线与竖直线的夹角；z1=首次>45°（失衡，可回正），z2=>45°且后续保持>45°（不可回正=摔倒）；贴地帧关键点丢失按"持续"处理。</p><div class="why">为什么行：姿态角是唯一在"站立/蹲姿/摔倒"三者上都能正确表述的物理量；45° 由用户目视标准定义。工程细节：检测从 GPU 挪到 CPU，再挪到 680M 核显（ONNX+DirectML），彻底避免与生成抢显存。</div></div>
+    </div>
+  </section>
+
+  <section id="vram" class="glass">
+    <h2>4GB 显存攻克专题</h2>
+    <p class="lead">整个项目的最大约束。官方 H3 的推荐门槛是 8GB 起步；本机只有 4GB，且没有独立显存的富余。以下每一步都是在"跑不起来"与"跑得动但慢"之间反复试探出的解。</p>
+    <div class="battle glass"><div class="num">1</div><div><h3>第一关：W4A8 量化 + 官方低显存加载器</h3><p>把权重切成 4bit 激活 8bit（W4A8），用官方 ExperimentalW4A8UNETLoader 加载，配合 --lowvram 启动。这一步把模型本身"塞进"显存，是后面一切的前提。</p></div></div>
+    <div class="battle glass"><div class="num">2</div><div><h3>第二关：MiniMaxH3BlockCache 块缓存</h3><p>低显存模式下权重不能全驻显存，必须按块搬入搬出；块缓存让常用块留在显存，避免每步从头搬。K 与块数调参后，单步采样稳定在 65-70s。</p></div></div>
+    <div class="battle glass"><div class="num">3</div><div><h3>第三关：ChunkFeedForward(chunks=6, min_tokens=4096) 分块前馈</h3><p>前馈层整体算会瞬时爆显存；切成 6 块、每块最小 4096 token，逐块算——这是从尝试 4 块（仍爆）到 6 块（通过）的收敛过程。结果：0 OOM。</p></div></div>
+    <div class="battle glass"><div class="num">4</div><div><h3>第四关：画布妥协与反击（448→512→640）</h3><p>先降到 448×256 保证能跑；纹理糊 → 512×288；查官方 h3lite 技能确认 640×352 为验证桶并在 4GB 上实测通过。这是"先问官方再调参"的转折：花在试错上的时间远多于读文档。</p></div></div>
+    <div class="battle glass"><div class="num">5</div><div><h3>第五关：帧率与分辨率的"绕行"</h3><p>原生 24fps 不满足 30fps 目标、640×352 不满足 720p 目标——但两者都不能在生成侧提升（显存）。绕行方案：RIFE 插值到 48fps + RealESRGAN 帧级超分到 720p。把"生成做不到"变成"后处理能做到"。</p></div></div>
+    <div class="battle glass"><div class="num">6</div><div><h3>第六关：生成与标注的分工</h3><p>标注（姿态检测）一开始也在独显上跑，与 Comfy 生成互相抢卡导致死锁、队列堵死、单条从 10 分钟拖到 4 小时。解法：标注切 680M 核显（yolo11n-pose 导出 ONNX + DirectML），独显完全让给生成。这一关也是"稳定性工程"的根源部分。</p></div></div>
+    <div class="battle glass"><div class="num">7</div><div><h3>第七关：采样与标注的取帧规则定型</h3><p>标注取帧只取后半段（SAMPLE_FROM=0.5，每秒 8 帧）——因为前半段可能是"轻微失衡又回正"的假摔；只有后半段的持续失衡才是真摔的起点。这个规则是用户对"检测不能太早也不能太晚"的直接要求，最终固化为：前 35% 采负样本（0/3），后半段采正样本（1/2）。</p></div></div>
+  </section>
+
+  <section id="labels" class="glass">
+    <h2>标注体系演进</h2>
+    <p class="lead">自动化是硬要求（用户：不做人工标注）。但自动化标注的"语义"才是难点——它要回答"什么时候算失衡、什么时候算摔倒"。</p>
+    <h3>四类标签体系（现役）</h3>
+    <table>
+      <tr><th>类别</th><th>含义</th><th>判定</th><th>用途</th></tr>
+      <tr><td>0 站立</td><td>直立/轻微晃动，可回正</td><td>躯干倾角 < 45°</td><td>负样本（区分"没失衡"）</td></tr>
+      <tr><td>1 失衡</td><td>倾斜 ≥45°，但仍可能回正</td><td>倾角首次 >45°</td><td>预警/中间态（让模型学会边界）</td></tr>
+      <tr><td>2 摔倒</td><td>≥45° 且不可回正（必定摔）</td><td>倾角 >45° 且后续保持 >45°</td><td>检测触发目标</td></tr>
+      <tr><td>3 蹲下</td><td>全程蹲姿作业（不算摔倒）</td><td>蹲姿分支，未摔倒段</td><td>消除"蹲≠摔"误判</td></tr>
+    </table>
+    <h3>演进过程（为什么是四类而不是一类）</h3>
+    <p class="lead">① 最初只有"人框"（检测人）→ ② 二区（前段=0/后段=1，问题：误触发无负样本）→ ③ 三区（+失衡预警，问题：蹲姿无法表达）→ ④ 四区（+蹲下）。每一步都是被"真实数据暴露的错误"推着走的：先是"可回正踉跄"的误报，后是"蹲着干活"的误报。</p>
+    <h3>标注管线</h3>
+    <p class="lead">生成即标注（yolo11s-seg 每帧人框 + 多边形 seg）→ 姿态判定写入类别 → 自训练（yolo11s，四类，60 epochs / imgsz 512 / batch 8）→ 精修模型回填。像素级备选：SAM2.1 tiny 视频级传播（影子方案，未启用）。</p>
+  </section>
+
+  <section id="principle" class="glass">
+    <h2>人形识别原理（怎么识别出的人形）</h2>
+    <p class="lead">标注的本质，是让程序替人回答这帧画面里的三件事：<b>有没有人形？人形在哪？人是什么姿态？</b>本项目的答案分四步——「先定位（检测出像人的区域）→ 再证明（关键点＋像素掩码确认这是完整的人）→ 后描态（躯干角度读出站立/失衡/摔倒/蹲）→ 兜底（识别失败宁可空着也不乱标）」。</p>
+
+    <h3>底层原理：YOLO 为什么能「看见」人</h3>
+    <p>YOLO 把画面切成 <b>S×S 网格</b>，每个网格输出一组候选（框中心/宽高/对象置信度/类别概率）；模型在 <b>COCO 等大规模人像标注数据</b>上训练出「人形」的统计特征——头肩结构、四肢比例、服装纹理、边缘轮廓的组合。推理时一次前向经过<b>多尺度特征金字塔</b>：每个网格预测候选 → <b>置信度 ≥0.25 过滤</b> → <b>NMS 去重</b> → 得到「人」框；<b>关键点分支</b>再在框内预测 17 个关键点的位置与可见度（本项目收敛为 14 点：脖/额 + 肩肘腕髋膝踝×2）。这不是模板匹配，而是深度网络从海量样本里学到的「人形特征响应」。</p>
+
+    <h3>项目识别链（怎么识别出人形）</h3>
+    <div class="cards">
+      <div class="card glass"><span class="tag now">第①步</span><h4>人框定位：yolo11n-pose 优先</h4><p>姿态模型<b>只有「人」这一类</b>，天然不被背景/窗户/杂物抢框；conf≥0.25，1920 主推定 → 1280 降档重试；多框时按「<b>框置信 + 0.12×强关键点数</b>」打分选主框（骨架弱的幻影框面积再大也不抢）；同一人物的碎框（IoU≥0.05）合并取外接。</p><div class="why">兜底链：yolo11s-seg 分割掩码框 → yolo11n 检测框（仅 person 类）。</div></div>
+      <div class="card glass"><span class="tag now">第②步</span><h4>骨架证明：14 关键点只标真实检出</h4><p>脖/额（由鼻/眼与双肩中点推得）+ 身体 12 点。conf≥0.5 → vis=2（强可见），0.15~0.5 → vis=1，越低越弱。<b>越界（坐标不在画面内）一律不标</b>；不做镜像脑补、不做解剖外推——上一版乱标点的主因就在这里被根治。</p><div class="why">含义：关键点回答「这框里确实是人」，并给出姿态角原料。</div></div>
+      <div class="card glass"><span class="tag now">第③步</span><h4>像素级人形：分割掩码 + SAM2 精修</h4><p>yolo11s-seg 只取 <b>person 类</b>最大面积掩码（防窗户/杂物大掩码抢框），且掩码必须与人物框<b>指向同一目标</b>（交并/较小面积 ≥0.4）才采用；掩码边缘简化 ≤100 点成多边形。</p><div class="why">SAM2.1 tiny（框提示精修）仅在掩码漏点/贴边出画/过小时运行；提示框以「人体证据」（掩码∪关键点+12%）为界，<b>面积守卫</b>：SAM2 掩码 >2.5×原掩码或 >0.30 画面即拒用。</div></div>
+      <div class="card glass"><span class="tag now">第④步</span><h4>完全框选：掩码∪关键点 + 4% 边距</h4><p>最终框 = [像素级掩码 ∪ 画面内可视关键点] 的<b>并集</b>＋4% 边距，再 clamp 到画面内——贴边人体（头盔顶/腿脚漏出框外）全部罩进框，这是「识别出的人形」的最终答案。</p><div class="why">宁缺毋滥：黑帧（均值亮度&lt;25）不标注；最终框 &lt;1.5% 画面视为「没认出人」→ 不标注。</div></div>
+      <div class="card glass"><span class="tag now">第⑤步</span><h4>描态：躯干轴倾角 45° 阈值</h4><p>髋中点→肩中点连线（躯干轴）与竖直线的夹角：首次 &gt;45° = 失衡（z1，可回正）；&gt;45° 且后续帧持续 &gt;45° = 摔倒（z2，不可回正）；贴地丢关键点按「持续」处理；全程蹲姿 = 类别 3（蹲≠摔）。</p><div class="why">关键点从「证明存在」升级为「读状态」——这就是四类标签（0 站立/1 失衡/2 摔倒/3 蹲下）的物理来源。</div></div>
+    </div>
+
+    <h3>为什么是这套组合（而非单模型）</h3>
+    <table>
+      <tr><th>环节</th><th>解决什么</th><th>为什么用它</th></tr>
+      <tr><td>yolo11n-pose</td><td>人框 + 骨架</td><td>单一人类别，防背景抢框；骨架天然支持姿态角</td></tr>
+      <tr><td>yolo11s-seg</td><td>像素级掩码</td><td>贴边/出画肢体补全；多边形标注的直接来源</td></tr>
+      <tr><td>SAM2.1 tiny</td><td>精修掩码</td><td>分割漏点、贴边出画时的补全；面积守卫防幻影</td></tr>
+      <tr><td>yolo11n（检测兜底）</td><td>最后防线</td><td>pose/分割全失败时保底（仅 person 类）</td></tr>
+      <tr><td>ONNX + DirectML（680M 核显）</td><td>算力</td><td>29ms/帧且不与 H3 生成抢独显</td></tr>
+    </table>
+    <p class="lead">一句话总结：<b>Pose 负责「认出人」并给出姿态角，Seg/SAM2 负责「描出完整人形」，多级兜底与面积守卫负责「不认错」，角度判据负责「读出状态」</b>——识别结果再回填自训练（yolo11n 四类 60 epochs），模型与标注闭环进化。</p>
+  </section>
+
+  <section id="stability" class="glass">
+    <h2>稳定性工程</h2>
+    <p class="lead">产线要"挂机跑几十小时"，任何一环掉链子都要自愈。这张表记录的是：什么会坏、怎么发现、怎么兜底——每一条都是真实事故的产物。</p>
+    <table>
+      <tr><th>故障</th><th>发现方式</th><th>自愈</th></tr>
+      <tr><td>ComfyUI 崩溃</td><td>守护器 30s 探测</td><td>自动拉起（4h 定时刷新防长跑状态降级）</td></tr>
+      <tr><td>任务历史被清空（重启）</td><td>等待超时/日志静止</td><td>孤儿回收：按输出文件 mtime 认领成品，不浪费</td></tr>
+      <tr><td>Comfy 挂死（队列僵住）</td><td>采样日志 5 分钟无写入</td><td>清空烂队列 + 快速失败重试（<3 分钟）</td></tr>
+      <tr><td>新任务排队尾永远轮不到</td><td>队列积压检查</td><td>挂死时清空队列，从源头断根</td></tr>
+      <tr><td>GPU 竞争（标注 vs 生成）</td><td>单条时长从 10 分漂到 4 小时</td><td>标注切 680M 核显（DirectML），独显独占</td></tr>
+      <tr><td>多实例竞争</td><td>日志/输出互相覆盖</td><td>重启前杀旧实例，唯一实例约束</td></tr>
+      <tr><td>日志句柄断裂（面板不更新）</td><td>日志文件 mtime 不动但 meta 在涨</td><td>进度改由 meta 全量驱动，重开后自动恢复</td></tr>
+      <tr><td>标签检测失败</td><td>测试复现</td><td>重试一次 + 保守回退（前 35%=0 / 后 65%=2，语义正确）</td></tr>
+    </table>
+  </section>
+
+  <section id="opensource" class="glass">
+    <h2>开源清单（详版）</h2>
+    <h3>现役核心</h3>
+    <table>
+      <tr><th>项目</th><th>用途</th></tr>
+      <tr><td>MiniMax H3（H3 4B W4A8）</td><td>摔倒视频生成核心模型</td></tr>
+      <tr><td>h3lite（官方 H3 技能包）</td><td>提示词标准 + 640×352 低显存配方验证 + 多镜头流程参考</td></tr>
+      <tr><td>ComfyUI</td><td>生成/插值/超分执行引擎</td></tr>
+      <tr><td>ComfyUI-Frame-Interpolation（RIFE49 + taichi）</td><td>24→48fps 帧插值</td></tr>
+      <tr><td>Real-ESRGAN（ncnn-vulkan）</td><td>720p 超分</td></tr>
+      <tr><td>Ultralytics YOLO（yolo11s/11n/pose/seg）</td><td>生成即标注 + 姿态判定 + 自训练</td></tr>
+      <tr><td>ONNX Runtime + DirectML</td><td>姿态检测跑 680M 核显</td></tr>
+      <tr><td>X-AnyLabeling</td><td>工作台标注工具（AI 辅助）</td></tr>
+      <tr><td>OpenCV / NumPy / SciPy / Pillow / imageio-ffmpeg</td><td>帧处理、标注数据链、视频归档</td></tr>
+    </table>
+    <h3>废案（使用过、已移除，含原因）</h3>
+    <table>
+      <tr><th>项目</th><th>用于</th><th>移除原因</th></tr>
+      <tr><td>AnimateDiff-Evolved + SD1.5 + Counterfeit-V3.0</td><td>动画片方案</td><td>卡通风格与实拍数据集不符</td></tr>
+      <tr><td>Ref2VA（H3 官方参考模式）</td><td>跨镜头一致</td><td>4GB 无法承载参考编码器常驻（实测崩溃）</td></tr>
+      <tr><td>3D Gaussian Splatting</td><td>照片→三维模型</td><td>三维线暂停（数据集用于检测；环境保留）</td></tr>
+      <tr><td>NeRF / COLMAP / MiDaS / TripoSR / StableFast</td><td>三维重建候选</td><td>视角依赖 / 失败模式（镜面弱纹理）/ 真实感不足</td></tr>
+      <tr><td>Wan2.2-Fun 1.3B/5B · LTX-Video 2B</td><td>4GB 可跑的视频替代候选</td><td>评估后 H3 首帧方案一致性更强、更贴合</td></tr>
+      <tr><td>448×256 / 512×288 画布</td><td>早期低显存妥协</td><td>被 640×352 官方验证桶取代</td></tr>
+      <tr><td>高度比 / 纵横比失衡判定</td><td>早期自动标注</td><td>误报 / 无法区分蹲姿，被姿态角取代</td></tr>
+      <tr><td>10s 采样 / 4s 等早期超长参数</td><td>早期质量探索</td><td>按质量-速度平衡收敛到 6 步</td></tr>
+    </table>
+    <h3>备用（未启用）</h3>
+    <p><span class="tag standby">影子</span> SAM2.1 tiny（视频级像素传播标注）· <span class="tag dead">废弃</span> Qwen2.5-VL via Ollama（千问视觉，API 自带视觉后弃用）· <span class="tag standby">待实施</span> 角色 LoRA（工坊多镜头一致性）</p>
+  </section>
+
+  <section id="ai" class="glass">
+    <h2>AI 生态（DeepSeek 双宿主）</h2>
+    <h3>2.1 模型与宿主</h3>
+    <table>
+      <tr><th>组件</th><th>角色</th><th>说明</th></tr>
+      <tr><td>DeepSeek API（deepseek-chat）</td><td>后端大模型（唯一）</td><td>所有宿主共用同一后端</td></tr>
+      <tr><td>@deepseek-ai/dsh 0.1.1-rc.2</td><td>主宿主（AI 工作台）</td><td>Codex 会话实测 0.1.2-rc.1 启动 15 秒闪退 → 降级稳定版</td></tr>
+      <tr><td>DSH Desktop 43.3.0.0</td><td>桌面客户端</td><td>—</td></tr>
+    </table>
+    <h3>2.2 自写插件（现役，开源/自研标注）</h3>
+    <table>
+      <tr><th>插件</th><th>性质</th><th>功能</th></tr>
+      <tr><td>dsh-ai-studio</td><td>自写（thin-client）</td><td>工坊工具的瘦客户端：仅转发本机 127.0.0.1:59771 的 status/action/project/script/image/video 等工具，全程零外网、不持密钥</td></tr>
+      <tr><td>dsh-doc-tools</td><td>自写</td><td>文档工具：docx/pdf/md 读写、转换、结构化编辑（改文案/表格/样式）</td></tr>
+      <tr><td>dsh-peak-gate</td><td>自写</td><td>峰值门控（资源/并发保护），默认 [disabled] 安全态，防崩溃模式写法的样板</td></tr>
+      <tr><td>密钥守护（key_auto_watcher）</td><td>自写（脚本）</td><td>桌面"API密钥.txt"文档源 + 本机自动换钥：检测到内容变化即替换全部本地存储，零网络</td></tr>
+      <tr><td>h3lite 官方技能包</td><td>官方/外部</td><td>官方 H3 提示词写作、低显存配方、多镜头流程（director-sequences）等权威参考</td></tr>
+    </table>
+    <p class="lead">注：视觉理解已由 DeepSeek API 自身承担，以下组件随之废弃（不再使用，仅作史料保留）：</p>
+    <table>
+      <tr><th>组件</th><th>状态</th><th>说明</th></tr>
+      <tr><td>多模态组件（multimodal-helper）</td><td>⛔ 已废弃</td><td>旧"眼睛/耳朵"（moondream2 视觉 + whisper 语音 + rapidocr 文字，pywebview 独立窗口）——API 带视觉理解后不再需要；历史事故（RLock 自死锁等）仅留档</td></tr>
+      <tr><td>Qwen2.5-VL（Ollama 视觉模型）</td><td>⛔ 已废弃</td><td>千问视觉 = 弃用状态不再使用；Ollama 未安装亦"非必需"（此前环境检测的红点按"可选"处理，现明确为废弃项）</td></tr>
+    </table>
+    <h3>2.3 支撑软件</h3>
+    <table>
+      <tr><th>软件</th><th>说明</th></tr>
+      <tr><td>AG-Switch</td><td>Codex→DeepSeek 桥（127.0.0.1:15721；wire_api=responses + 实验令牌=桥托管 PROXY_MANAGED；上游=DeepSeek）</td></tr>
+      <tr><td>cc-switch</td><td>大模型账号切换器（密钥存储已做 ACL 收紧到当前用户）</td></tr>
+      <tr><td>ProxySelfHeal 计划任务</td><td>桥存活自愈（1 分钟/次，隐藏窗口）；配套 restore 脚本可随时恢复</td></tr>
+    </table>
+    <h3>2.4 Codex 兜底（软件修改后接 DeepSeek）</h3>
+    <table>
+      <tr><th>项</th><th>说明</th></tr>
+      <tr><td>定位</td><td>harness 崩溃期间的兜底智能体宿主；harness 恢复后作为冗余与史料源</td></tr>
+      <tr><td>后端</td><td>仍接 DeepSeek（经 AG-Switch 桥，而非 OpenAI）</td></tr>
+      <tr><td>软件修改</td><td>① AG-Switch 桥配置（上游 DeepSeek + PROXY_MANAGED 令牌）② ProxySelfHeal 计划任务（桥 1 分钟自愈）③ Codex config.toml（接口模式 responses + 桥地址）</td></tr>
+      <tr><td>兜底记录</td><td>Codex 在项目的所有会话（.codex 全量存档）可随时考古：dsh 0.1.2-rc.1 闪退结论、外屏问题、多模态插件、教辅 OCR、工作台 v0.10.x 全程演进等</td></tr>
+    </table>
+    <p class="lead">双宿主的形成：harness 不稳定期（闪退由 dsh 版本回归引起）Codex 接手；两者共享同一份项目记录，互相考古——本项目多次依赖这一点（例如从 Codex 08-29 会话回查到闪退的真正原因）。</p>
+  </section>
+
+  <section id="results" class="glass">
+    <h2>成效</h2>
+    <div class="counters">
+      <div class="counter glass"><b data-count="50">0</b><span>合成视频目标（条）</span></div>
+      <div class="counter glass"><b data-count="800">0</b><span>自动标注帧（约）</span></div>
+      <div class="counter glass"><b data-count="60">0</b><span>训练轮数（epochs）</span></div>
+      <div class="counter glass"><b data-count="3">0</b><span>现役 3 类 mAP50 ≥ 0.87</span></div>
+      <div class="counter glass"><b data-count="24">0</b><span>无人值守小时</span></div>
+    </div>
+    <h3>六次改道 · 精度走势（留出集 fall mAP50）</h3>
+    <div class="chart" id="mapChart">
+      <div class="crow"><span>MuJoCo 人偶</span><div class="bar"><div class="fill" data-w="72.5"></div></div><b class="num">0.725</b></div>
+      <div class="crow"><span>真人像素合成</span><div class="bar"><div class="fill" data-w="99.5"></div></div><b class="num">0.995</b></div>
+      <div class="crow"><span>3D 场景重建</span><div class="bar"><div class="fill" data-w="49"></div></div><b class="num">0.49</b></div>
+      <div class="crow"><span>SMPL + Blender</span><div class="bar"><div class="fill" data-w="73.4"></div></div><b class="num">0.734</b></div>
+      <div class="crow"><span>扩散生成（实验）</span><div class="bar"><div class="fill" data-w="0"></div></div><b class="num">—</b></div>
+      <div class="crow"><span>H3 首帧方案（现役）</span><div class="bar"><div class="fill now" data-w="87"></div></div><b class="num">0.87</b></div>
+    </div>
+    <p class="lead">纵览：最"物理正确"的方案（MuJoCo）精度不及"真像素"；投入最重的 3D 链路反倒出现 0.49 的骤降；六次改道把方向钉在 H3 首帧上——**它不是最漂亮的方案，而是所有失败路径的交点**。</p>
+  </section>
+
+  <footer>YOLO 工作台项目技术档案 · 液态玻璃 v2 · 由 DSH + Codex 多会话实录整理 · 持续建设中</footer>
+</div>
+<script>
+(() => {
+  // 滚动渐显
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .08 });
+  document.querySelectorAll('section, .card, .battle, .tl-item').forEach(el => { el.classList.add('reveal'); io.observe(el); });
+  // 导航滚动高亮
+  const links = [...document.querySelectorAll('nav.toc a')];
+  const secs = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const spy = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id)); }
+  }), { rootMargin: '-40% 0px -55% 0px' });
+  secs.forEach(s => spy.observe(s));
+  // 方案矩阵筛选
+  const btns = [...document.querySelectorAll('#matFilters button')];
+  btns.forEach(b => b.onclick = () => {
+    btns.forEach(x => x.classList.toggle('on', x === b));
+    const f = b.dataset.f;
+    document.querySelectorAll('#matrix .cards > .card').forEach(c => {
+      const hit = f === 'all' || (f === 'dead' ? c.querySelector('.tag.dead') : c.querySelector('.tag.' + f));
+      c.style.display = hit ? '' : 'none';
+    });
+  });
+  // 数字滚动
+  const cnt = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target, end = +el.dataset.count, t0 = performance.now();
+    const tick = now => { const p = Math.min(1, (now - t0) / 1300); el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick); cnt.unobserve(el);
+  }), { threshold: .6 });
+  document.querySelectorAll('[data-count]').forEach(el => cnt.observe(el));
+  // mAP 条形图
+  const ch = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    setTimeout(() => e.target.querySelectorAll('.fill').forEach(f => f.style.width = f.dataset.w + '%'), 120);
+    ch.unobserve(e.target);
+  }), { threshold: .4 });
+  const chart = document.getElementById('mapChart'); if (chart) ch.observe(chart);
+  // 卡片 3D 悬停
+  document.querySelectorAll('.card, .battle').forEach(c => {
+    c.addEventListener('mousemove', ev => {
+      const r = c.getBoundingClientRect();
+      const rx = ((ev.clientY - r.top) / r.height - .5) * -5, ry = ((ev.clientX - r.left) / r.width - .5) * 5;
+      c.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+    });
+    c.addEventListener('mouseleave', () => { c.style.transform = ''; });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "说明": "环境模拟预设。字段: brightness(亮度增量), contrast(对比度), tint[r,g,b](色调倍率), haze_alpha(雾浓度), haze_color[B,G,R], blur(高斯核), vignette(暗角), rain(雨线数量), wet_floor(地面反光), noise(sigma)。",
+  "presets": [
+    {"id": "factory_fluorescent", "name": "工厂荧光灯", "brightness": 12, "contrast": 1.06, "tint": [1.02, 1.0, 1.08]},
+    {"id": "factory_dim", "name": "昏暗车间", "brightness": -55, "contrast": 0.82, "tint": [1.0, 1.0, 1.05]},
+    {"id": "factory_warm", "name": "暖光车间", "brightness": 6, "contrast": 1.03, "tint": [1.12, 1.0, 0.88]},
+    {"id": "factory_night", "name": "夜间车间", "brightness": -90, "contrast": 0.7, "tint": [0.95, 1.0, 1.2], "vignette": 0.5},
+    {"id": "fog_light", "name": "轻雾", "haze_alpha": 0.18, "blur": 3},
+    {"id": "fog_heavy", "name": "浓雾", "haze_alpha": 0.42, "blur": 5},
+    {"id": "water_mist", "name": "水雾", "haze_alpha": 0.3, "haze_color": [220, 200, 190], "blur": 3, "wet_floor": true},
+    {"id": "rain", "name": "雨", "brightness": -30, "contrast": 0.92, "rain": 120},
+    {"id": "dust", "name": "灰尘", "haze_alpha": 0.26, "haze_color": [140, 160, 170], "blur": 3},
+    {"id": "shadow_contrast", "name": "强对比阴影", "contrast": 1.25, "vignette": 0.35},
+    {"id": "night_shift", "name": "夜班", "brightness": -70, "contrast": 0.75, "tint": [0.9, 1.0, 1.25], "vignette": 0.4, "noise": 6},
+    {"id": "welding_glare", "name": "焊光", "brightness": 25, "contrast": 1.3, "tint": [1.2, 0.95, 0.7], "blur": 3},
+    {"id": "steam_high", "name": "高温蒸汽", "haze_alpha": 0.5, "haze_color": [235, 225, 215], "blur": 5, "brightness": 8},
+    {"id": "low_light_monitor", "name": "低照度监控", "brightness": -100, "contrast": 0.85, "tint": [0.85, 1.0, 1.1], "noise": 10, "vignette": 0.3}
+  ]
+}

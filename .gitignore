@@ -1,0 +1,110 @@
+# ============================================================================
+# 本文件的存在理由：`git init` 的前置条件。
+# 不先补全，首个 commit 会把 13 万个文件（含 10 万文件的 venv、21GB 权重）
+# 一起提进去 —— 事后清理比事前预防贵得多。
+# 实测口径见 `_migration/_top_level_count.py`（可重跑）。
+# ============================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# 虚拟环境（实测 10 万文件级）
+.venv/
+.venv_*/
+venv/
+env/
+
+# 运行时产物（全部可再生成）
+runs/
+logs/
+outputs/
+inputs/
+.recover/
+.trash/
+
+# 第三方（体积大 / 可重新拉取）
+tools/blender-4.5/
+tools/ComfyUI-master/
+tools/sam2/
+tools/pifuhd/
+tools/realesrgan-ncnn/
+tools/go-ai-studio-bin/
+tools/h3lite-main/
+third_party/
+node_modules/
+
+# 第三方工具上游壳（Archify 的 README / docs / examples / experiments 等，
+# 与本项目无关；`tools/archify/archify/` 是**运行必需**的包本体，不在此列 —— 见 sync_everything.py）
+tools/archify/archify.zip
+tools/archify/docs/
+tools/archify/examples/
+tools/archify/experiments/
+tools/archify/benchmarks/
+tools/archify/integrations/
+tools/archify/scripts/
+tools/archify/.github/
+
+# archify 出图时的临时工作目录（每次 deliver 新建一个随机后缀目录，用完即弃）
+archify/.archify-delivery-*/
+
+# 一次性诊断/取证脚本的隔离区（排查完即弃；保留在磁盘上备查，不入库）
+# 只收 diag_/exp_/probe_/draw_/analyze_ 一类 + 截图；正式自检资产(fitness_/smoke_/verify_)不在此列
+tools/qc/_scratch/
+
+# 权重（GB 级，只记版本号不进库）
+tools/h3_lite_weights/
+models/*.pt
+*.pt
+*.onnx
+*.pth
+*.safetensors
+*.pt.md5
+*.onnx.md5
+
+# 媒体素材（体积大，不属于源码）
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# 大体积杂项截图（34MB，非文档资产；同目录的 .md 文档不受影响）
+docs/misc/微信图片_*.png
+
+# 安装包 / 构建产物
+tools/make_installer/dist/
+dist/
+build/
+
+# 敏感配置
+.env
+.env.*
+
+# 数据集 (体积大, 不入库)
+data/
+datasets/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+NVIDIA Corporation/
+
+# 项目本地状态与临时探针
+.workbuddy/
+_qc/
+_scan_lss/
+.dsh-vision-toolkit/
+
+# 改前快照 / 备份
+*.bak
+*.bak[0-9]
+*.bak-*
+*.bak_*
+*.orig
+*.rej
+_archive/
+_migration_backup/

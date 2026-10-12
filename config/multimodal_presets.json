@@ -1,0 +1,33 @@
+{
+  "说明": "多模态组件配置预设。vision.engine: local/api/off; asr.model 支持 tiny/base/small/medium/large-v3 或本地模型路径。",
+  "gpu8_standard": {
+    "name": "8GB 标准（推荐）",
+    "vision": {"engine": "local", "local_model": "%USERPROFILE%\\Documents\\多模态组件\\多模态组件\\models\\Qwen2.5-VL-7B-Instruct", "local_quantize": true, "max_tokens": 640},
+    "asr": {"engine": "local", "model": "%USERPROFILE%\\Documents\\多模态组件\\多模态组件\\models\\faster-whisper-large-v3", "device": "cuda"},
+    "ocr": {"engine": "rapidocr"}
+  },
+  "gpu8_light": {
+    "name": "8GB 轻量（快）",
+    "vision": {"engine": "local", "local_model": "Qwen/Qwen2.5-VL-3B-Instruct", "local_quantize": false, "max_tokens": 512},
+    "asr": {"engine": "local", "model": "small", "device": "cuda"},
+    "ocr": {"engine": "rapidocr"}
+  },
+  "gpu12_strong": {
+    "name": "12GB+ 旗舰",
+    "vision": {"engine": "local", "local_model": "Qwen/Qwen3-VL-8B-Instruct", "local_quantize": true, "max_tokens": 1024},
+    "asr": {"engine": "local", "model": "%USERPROFILE%\\Documents\\多模态组件\\多模态组件\\models\\faster-whisper-large-v3", "device": "cuda"},
+    "ocr": {"engine": "paddleocr"}
+  },
+  "cpu_min": {
+    "name": "纯 CPU 轻量",
+    "vision": {"engine": "florence", "max_tokens": 256},
+    "asr": {"engine": "local", "model": "tiny", "device": "cpu"},
+    "ocr": {"engine": "rapidocr"}
+  },
+  "api_only": {
+    "name": "云端 API (DeepSeek 多模态)",
+    "vision": {"engine": "api", "api": {"base_url": "https://api.deepseek.com", "api_key_env": "DEEPSEEK_API_KEY", "model": "deepseek-v4.1-flash-expires-on-0910"}},
+    "asr": {"engine": "off", "api": {"base_url": "", "api_key": "", "model": ""}},
+    "ocr": {"engine": "rapidocr"}
+  }
+}

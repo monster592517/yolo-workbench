@@ -1,0 +1,25 @@
+{
+  "channels": {
+    "estop": {
+      "type": "log"
+    },
+    "door": {
+      "type": "http",
+      "url": "http://x"
+    }
+  },
+  "rules": {
+    "fall": [
+      {
+        "channel": "estop",
+        "action": "on"
+      }
+    ],
+    "door_open": [
+      {
+        "channel": "door",
+        "action": "post"
+      }
+    ]
+  }
+}
