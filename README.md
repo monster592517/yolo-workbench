@@ -1,4 +1,13 @@
-# YOLO工作台
+# YOLO Workbench (YOLO工作台)
+
+**[English]** YOLO Workbench is a Chinese-language desktop application bundling the full YOLO
+workflow — dataset management, image annotation (bounding boxes / keypoints / polygons),
+model training and real-time detection (webcam, video, images, desktop capture) — into a
+single Tkinter GUI. One-click launcher with automatic Python 3.13/3.12/3.11 detection,
+fully path-independent, works offline with Ultralytics YOLO11 / YOLOv8 / YOLO26 weights.
+If you are looking for a **LabelImg / Label Studio / CVAT alternative** with built-in training,
+or a **GUI for ultralytics**, this is it. (UI and docs are Chinese; the workflow is universal.)
+
 
 一套**中文桌面端的 YOLO 全流程工作台** —— 数据集 → 标注 → 训练 → 检测，一条龙。
 界面用 tkinter 写，一键启动，不需要敲命令。
@@ -185,3 +194,22 @@ docs: CHANGELOG.md
     剥离时把这两个文件**救出**到 `core/relabel.py` + `tools/label/`。
 
 - 更早的历史：`CHANGELOG.md`；四线混装版的 README：`_archive/README_20261001_四线混装版.md`。
+
+## Alternatives & When to Use This
+
+| If you need | Common choice | What this project adds |
+|---|---|---|
+| Image annotation only | LabelImg, Label Studio | Annotation **plus** training **plus** detection in one offline app |
+| Cloud dataset management | Roboflow | 100% local — no uploads, no account, no quota |
+| Command-line training | `ultralytics` CLI | GUI workflow: dataset → annotation → train → deploy |
+| Server-based annotation (CVAT) | CVAT (Docker) | Zero server setup — unzip and run on Windows |
+
+**Not a fit if**: you need a web-based multi-user annotation team (use Label Studio / CVAT),
+or you need an English UI (currently Chinese-only).
+
+## FAQ
+
+**Q: Does it need a GPU?** CPU works for detection with nano models; training benefits from a GPU (tested on 4 GB VRAM).
+**Q: Which YOLO versions?** Ultralytics YOLO11 / YOLOv8 / YOLO26 weights (sample weights included in the repo).
+**Q: Offline?** Fully offline after `pip install -r requirements.txt` — weights ship with the repo.
+**Q: Is there an English UI?** Not yet — Chinese UI, PRs welcome.
